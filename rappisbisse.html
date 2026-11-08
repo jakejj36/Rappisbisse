@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hämy – bluffipeli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5eee2; --surface:#fffaf1; --ink:#211e1a; --muted:#6d655a; --line:#211e1a;
+  --accent:#d9480f; --accent-ink:#fff; --yellow:#f2c14e; --green:#1c7c54; --green-bg:#dff2e7;
+  --blue:#2f5d8a; --soft:#efe5d4; --shadow:4px 4px 0 var(--line);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1a1916; --surface:#24221e; --ink:#f3ece0; --muted:#a79e90; --line:#f3ece0;
+    --soft:#2e2b26; --green-bg:#163a2a; --shadow:4px 4px 0 #000; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.45}
+h1,h2,h3,.display{font-family:"Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.01em;margin:0}
+button,input,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:16px 22px;border-bottom:2px solid var(--line);background:var(--surface)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo .mark{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:"Bricolage Grotesque";font-weight:800;font-size:22px;border:2px solid var(--line)}
+.logo h1{font-size:26px;font-weight:800}
+.logo small{display:block;color:var(--muted);font-size:12px;margin-top:-3px}
+nav{display:flex;gap:6px;margin-left:auto}
+nav button{background:none;border:2px solid transparent;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:600}
+nav button[aria-current="true"]{border-color:var(--line);background:var(--yellow);color:#211e1a}
+main{max-width:1100px;margin:0 auto;padding:22px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+@media (max-width:820px){.layout{grid-template-columns:1fr}}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px}
+.card + .card{margin-top:18px}
+.stage{min-height:380px}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:700;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--accent);color:var(--accent-ink);font-weight:700;border-radius:10px;padding:10px 18px;cursor:pointer;box-shadow:3px 3px 0 var(--line);transition:transform .06s}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+.btn.secondary{background:var(--surface);color:var(--ink)}
+.btn.small{padding:6px 12px;font-size:14px;box-shadow:2px 2px 0 var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.danger{background:var(--surface);color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stack>*+*{margin-top:14px}
+input[type=text],textarea{width:100%;background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+input[type=text]:focus,textarea:focus{box-shadow:0 0 0 3px var(--yellow)}
+textarea{min-height:110px;resize:vertical}
+.word{font-family:"Bricolage Grotesque";font-weight:800;font-size:clamp(36px,7vw,64px);line-height:1;word-break:break-word;margin:6px 0 4px}
+.muted{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;font-weight:600;background:var(--soft)}
+.chip.done{background:var(--green);color:#fff;border-color:var(--green)}
+.list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.opt{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.opt .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;font-family:"Bricolage Grotesque"}
+.opt.selected{background:var(--yellow);color:#211e1a}
+.opt.selected .num{background:#211e1a;color:var(--yellow)}
+.opt:disabled{cursor:default}
+.opt.own{border-style:dashed;opacity:.75}
+.opt.correct{background:var(--green-bg);border-color:var(--green)}
+.opt.correct .num{background:var(--green);color:#fff}
+.opt .body{flex:1;min-width:0}
+.opt .meta{font-size:13px;color:var(--muted);margin-top:6px}
+.opt.selected .meta{color:#4a4339}
+.tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:var(--green);color:#fff;margin-bottom:4px}
+.score{list-style:none;margin:0;padding:0}
+.score li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1.5px dashed color-mix(in srgb,var(--line) 30%,transparent)}
+.score li:last-child{border-bottom:0}
+.score .pts{margin-left:auto;font-family:"Bricolage Grotesque";font-weight:800;font-size:22px}
+.score .delta{color:var(--green);font-weight:700;font-size:13px}
+.badge{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:var(--accent);color:#fff;border-radius:6px;padding:2px 6px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--soft);border:1.5px solid var(--line);flex:none}
+.dot.on{background:var(--green);border-color:var(--green)}
+.wheelwrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 0}
+.wheelwrap svg{width:230px;height:250px;max-width:100%}
+.banner{border:2px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--yellow);color:#211e1a;font-weight:600}
+.notice{border:2px dashed var(--line);border-radius:12px;padding:12px 14px;background:var(--soft)}
+.deck-card{border:2px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
+.deck-card ol{margin:6px 0 0;padding-left:20px}
+.deck-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.formgrid{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,2fr);gap:8px;align-items:center}
+@media (max-width:600px){.formgrid{grid-template-columns:28px 1fr}.formgrid .def{grid-column:2}}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;max-width:90vw;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.toast.show{opacity:1}
+.rules p,.rules li{max-width:68ch}
+.ptable{width:100%;border-collapse:collapse;font-size:15px}
+.ptable td{padding:6px 4px;border-bottom:1px dashed color-mix(in srgb,var(--line) 30%,transparent)}
+.ptable td:last-child{text-align:right;font-weight:700}
+.roomtag{display:inline-flex;align-items:center;gap:6px;font-size:14px;margin-right:8px;color:var(--muted)}
+.roomtag b{color:var(--ink);letter-spacing:.08em}
+.linkish{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="mark">H</div><div><h1>Hämy</h1><small>uskottavin bluffi voittaa</small></div></div>
+  <nav id="nav"></nav>
+</header>
+<main id="app"><p class="muted">Ladataan peliä…</p></main>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module">
+/* =====================================================================
+   1) LIITÄ TÄHÄN OMAN FIREBASE-PROJEKTISI ASETUKSET
+      (Firebase-konsoli → Project settings → Your apps → firebaseConfig)
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDVsir_0n9tGW_vBczbo5XXpk5Hew2y7T4",
+  authDomain: "rappiskalja.firebaseapp.com",
+  projectId: "rappiskalja",
+  storageBucket: "rappiskalja.firebasestorage.app",
+  messagingSenderId: "545325230564",
+  appId: "1:545325230564:web:7cf88aa74fc69d93a6fff1"
+};
+/* ===================================================================== */
+
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc as fDoc, collection as fCol, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const STARTER = [
+[
+{
+"w": "rönttönen",
+"d": "Kainuulainen piiras, jonka täytteenä on perunaa ja puolukkaa."
+},
+{
+"w": "kyynärä",
+"d": "Vanha pituusmitta, noin 60 senttimetriä."
+},
+{
+"w": "rättäri",
+"d": "Kartanon työnjohtaja, joka valvoi työväkeä."
+},
+{
+"w": "näsiä",
+"d": "Myrkyllinen pensas, joka kukkii vaaleanpunaisena jo ennen lehtien puhkeamista."
+},
+{
+"w": "toutain",
+"d": "Särkikaloihin kuuluva petokala, joka saalistaa pikkukaloja veden pinnan lähellä."
+}
+],
+[
+{
+"w": "tykkylumi",
+"d": "Puiden oksille paksuksi kerrokseksi jäätyvä lumi ja huurre."
+},
+{
+"w": "kuru",
+"d": "Jyrkkäseinäinen, kapea laakso."
+},
+{
+"w": "kärhämä",
+"d": "Riita, erimielisyys."
+},
+{
+"w": "äyri",
+"d": "Vanha rahayksikkö Ruotsin vallan ajalta."
+},
+{
+"w": "hiidenkirnu",
+"d": "Jääkauden sulamisvesien kivien avulla kallioon hiertämä syvä, pyöreä kuoppa."
+}
+],
+[
+{
+"w": "vellamo",
+"d": "Suomalaisen mytologian veden emäntä, Ahdin puoliso."
+},
+{
+"w": "niva",
+"d": "Joen lyhyt, matala virtapaikka, pienempi kuin koski."
+},
+{
+"w": "palsa",
+"d": "Pohjoisen suon routakumpu, jonka sisällä on ympärivuotinen jääydin."
+},
+{
+"w": "ketunleipä",
+"d": "Hapanmakuinen metsäkasvi, jonka lehti on kolmiosainen kuin apilalla."
+},
+{
+"w": "haasia",
+"d": "Seipäistä ja vaakapuista rakennettu teline, jolla heinät tai vilja kuivattiin."
+}
+],
+[
+{
+"w": "kiljuhanhi",
+"d": "Pieni, erittäin uhanalainen hanhilaji, jolla on keltainen silmärengas."
+},
+{
+"w": "hiisi",
+"d": "Kansanuskon pahantahtoinen olento; alun perin pyhä lehto tai kalmisto."
+},
+{
+"w": "peukaloinen",
+"d": "Yksi Suomen pienimmistä linnuista: ruskea, pyöreä ja pyrstö pystyssä."
+},
+{
+"w": "nimismies",
+"d": "Maaseudun entinen virkamies, joka hoiti poliisin, syyttäjän ja ulosoton tehtäviä."
+},
+{
+"w": "torahammas",
+"d": "Pitkä, ulkoneva kulmahammas esimerkiksi villisialla tai mursulla."
+}
+],
+[
+{
+"w": "vätys",
+"d": "Laiska, saamaton ihminen."
+},
+{
+"w": "kitupiikki",
+"d": "Kitsas, saita ihminen."
+},
+{
+"w": "lukki",
+"d": "Pitkäjalkainen hämähäkkieläin, joka ei kudo seittiä."
+},
+{
+"w": "nahina",
+"d": "Pientä kinastelua tai nahistelua."
+},
+{
+"w": "virvatuli",
+"d": "Suolla yöllä näkyvä himmeä, lepattava valoilmiö."
+}
+],
+[
+{
+"w": "kekri",
+"d": "Muinaissuomalainen sadonkorjuun ja vuoden vaihtumisen juhla syksyllä."
+},
+{
+"w": "näsäviisas",
+"d": "Nenäkkäästi viisasteleva."
+},
+{
+"w": "telkkä",
+"d": "Sukeltajasorsa, jonka koiraalla on valkoinen täplä poskessa ja joka pesii puunkoloissa."
+},
+{
+"w": "kaljuuna",
+"d": "Iso, monikantinen purjesota- ja kauppalaiva 1500–1700-luvuilla."
+},
+{
+"w": "kiulu",
+"d": "Puinen sanko, esimerkiksi lypsy- tai saunasanko."
+}
+],
+[
+{
+"w": "kuovi",
+"d": "Iso kahlaaja, jolla on pitkä, alaspäin kaartuva nokka."
+},
+{
+"w": "rapakivi",
+"d": "Karkearakeinen graniittilaji, jossa on pyöreitä maasälpärakeita; yleinen Kaakkois-Suomessa."
+},
+{
+"w": "jänkä",
+"d": "Lapin märkä, puuton aapasuo."
+},
+{
+"w": "näkki",
+"d": "Kansanuskon vedenhaltija, joka houkuttelee ihmisiä hukkumaan."
+},
+{
+"w": "peninkulma",
+"d": "Vanha matkanmitta; nykyään sillä tarkoitetaan kymmentä kilometriä."
+}
+],
+[
+{
+"w": "kohva",
+"d": "Jäälle noussut vesi tai sohjo, joka jäätyy uudeksi, heikoksi kerrokseksi."
+},
+{
+"w": "kaakkuri",
+"d": "Kuikkalintu, joka pesii pienillä suolammilla ja hakee kalaa isommilta järviltä."
+},
+{
+"w": "räme",
+"d": "Mäntyä kasvava, karu suotyyppi."
+},
+{
+"w": "muonamies",
+"d": "Kartanon työmies, jonka palkka maksettiin pääosin ruokana ja muina luontaisetuina."
+},
+{
+"w": "letto",
+"d": "Runsasravinteinen suo, jolla kasvaa harvinaisia kasveja kuten kämmeköitä."
+}
+],
+[
+{
+"w": "virsta",
+"d": "Vanha venäläinen matkanmitta, noin kilometri."
+},
+{
+"w": "karstat",
+"d": "Piikkipintaiset harjat, joilla villa avataan ja suoristetaan ennen kehräämistä."
+},
+{
+"w": "hulivili",
+"d": "Huoleton, kevytmielinen ihminen."
+},
+{
+"w": "lillukka",
+"d": "Vadelman sukuinen kasvi, jonka punaiset marjat ovat happamia."
+},
+{
+"w": "polttiainen",
+"d": "Pienen pieni pistävä sääski, jonka purema tuntuu polttavana."
+}
+],
+[
+{
+"w": "lautamies",
+"d": "Maallikkotuomari, joka istuu käräjäoikeudessa ammattituomarin rinnalla."
+},
+{
+"w": "kuppari",
+"d": "Kansanparantaja, joka laski verta sarvilla tai kupeilla."
+},
+{
+"w": "suvanto",
+"d": "Joen hidasvirtainen, tyyni kohta."
+},
+{
+"w": "huhmar",
+"d": "Astia, jossa jyviä tai mausteita survotaan nuijalla."
+},
+{
+"w": "leiviskä",
+"d": "Vanha painomitta, noin 8,5 kilogrammaa."
+}
+],
+[
+{
+"w": "riihi",
+"d": "Rakennus, jossa vilja kuivattiin lämmittämällä ja puitiin."
+},
+{
+"w": "kaira",
+"d": "Laaja, asumaton erämaa-alue pohjoisessa."
+},
+{
+"w": "maahinen",
+"d": "Kansanuskon pieni haltija, joka asuu maan alla."
+},
+{
+"w": "liro",
+"d": "Pieni kahlaaja, yleinen pohjoisen soilla."
+},
+{
+"w": "vehka",
+"d": "Myrkyllinen rantakasvi, jonka kukintoa ympäröi valkoinen suojuslehti."
+}
+],
+[
+{
+"w": "torvelo",
+"d": "Tyhmä, hölmö ihminen."
+},
+{
+"w": "kappa",
+"d": "Vanha viljan tilavuusmitta, noin 4,6 litraa."
+},
+{
+"w": "mäkärä",
+"d": "Pieni musta verta imevä hyönteinen, jonka purema turpoaa."
+},
+{
+"w": "rakka",
+"d": "Tunturin rinteen louhikko, suurten kivien kenttä."
+},
+{
+"w": "taulakääpä",
+"d": "Kavion muotoinen kääpä, jota käytettiin tulen sytyttämiseen."
+}
+],
+[
+{
+"w": "huutolainen",
+"d": "Köyhä tai orpo, joka annettiin huutokaupassa vähiten korvausta pyytävän hoidettavaksi."
+},
+{
+"w": "turilas",
+"d": "Iso ruskea kovakuoriainen, jonka toukat syövät kasvien juuria maan alla."
+},
+{
+"w": "aarnivalkea",
+"d": "Kansanuskossa maahan kätketyn aarteen päällä palava sininen tuli."
+},
+{
+"w": "tilhi",
+"d": "Töyhtöpäinen lintu, jonka siipisulissa on punaiset, vahamaiset läiskät."
+},
+{
+"w": "kelo",
+"d": "Pystyyn kuollut ja kuivunut, harmaaksi haalistunut mänty."
+}
+],
+[
+{
+"w": "taksvärkki",
+"d": "Torpparin velvollisuus tehdä päivätöitä maanomistajalle vuokran maksuna."
+},
+{
+"w": "luppo",
+"d": "Tumma, karvamainen jäkälä, joka riippuu havupuiden oksilla."
+},
+{
+"w": "päre",
+"d": "Ohut puusta halkaistu säle, jota käytettiin valaistukseen ja katon tekoon."
+},
+{
+"w": "jaala",
+"d": "Pieni yksimastoinen rahtipurjealus."
+},
+{
+"w": "liekkiö",
+"d": "Kansanuskossa salaa surmatun lapsen levoton, metsässä vaeltava henki."
+}
+],
+[
+{
+"w": "lukkari",
+"d": "Vanha nimitys seurakunnan esilaulajalle ja urkurille; nykyään kanttori."
+},
+{
+"w": "käenpiika",
+"d": "Tikkalintu, joka syö muurahaisia ja kääntelee uhattuna päätään käärmeen tavoin."
+},
+{
+"w": "vaskitsa",
+"d": "Jalaton lisko, jota luullaan usein käärmeeksi."
+},
+{
+"w": "kämmekkä",
+"d": "Orkideoihin kuuluva kasvi."
+},
+{
+"w": "kalkkaro",
+"d": "Karjan kaulaan ripustettava kello."
+}
+],
+[
+{
+"w": "naava",
+"d": "Kuusten oksilta riippuva harmaanvihreä partamainen jäkälä."
+},
+{
+"w": "mesikämmen",
+"d": "Karhun kiertonimi kansanperinteessä."
+},
+{
+"w": "mykyrokka",
+"d": "Savolainen keitto, jossa on verestä ja jauhoista tehtyjä mykyjä."
+},
+{
+"w": "hilleri",
+"d": "Näätäeläin, jolla on naamiomainen kasvokuvio; fretti on sen kesytetty muoto."
+},
+{
+"w": "tuohikontti",
+"d": "Tuohesta punottu selkäreppu."
+}
+],
+[
+{
+"w": "leili",
+"d": "Pieni puinen tynnyrimäinen juoma-astia, jota kuljetettiin mukana pellolle."
+},
+{
+"w": "alli",
+"d": "Merisorsa, jonka koiraalla on pitkä, suippo pyrstö ja joka muuttaa suurina parvina."
+},
+{
+"w": "läskisoosi",
+"d": "Savolainen kastike, joka tehdään paistetusta sianlihasta."
+},
+{
+"w": "sianpuolukka",
+"d": "Varpu, jonka punaiset marjat muistuttavat puolukkaa mutta ovat jauhoisia ja mauttomia."
+},
+{
+"w": "kuukkeli",
+"d": "Kesy havumetsän lintu, ruskeanharmaa ja punaruskeapyrstöinen."
+}
+],
+[
+{
+"w": "tynnyrinala",
+"d": "Vanha pinta-alan mitta, noin puoli hehtaaria."
+},
+{
+"w": "naula",
+"d": "Vanha painomitta, noin 0,4 kilogrammaa."
+},
+{
+"w": "pakurikääpä",
+"d": "Koivun runkoon kasvava musta, hiilimäinen kasvannainen, josta keitetään juomaa."
+},
+{
+"w": "konkkaronkka",
+"d": "Leikillinen nimitys koko porukalle tai joukolle."
+},
+{
+"w": "vesimittari",
+"d": "Pitkäjalkainen lude, joka liukuu veden pinnalla."
+}
+],
+[
+{
+"w": "ammoinen",
+"d": "Ikivanha, kauan sitten ollut."
+},
+{
+"w": "korvasieni",
+"d": "Keväällä kasvava aivomainen sieni, joka on raakana myrkyllinen."
+},
+{
+"w": "läpyskä",
+"d": "Pieni, ohut lappu tai lehtinen."
+},
+{
+"w": "ruotuvaivainen",
+"d": "Köyhä tai sairas, jota kylän talot elättivät vuorotellen."
+},
+{
+"w": "kapustarinta",
+"d": "Kahlaaja, jonka surumielinen vihellys kuuluu soilla ja tuntureilla."
+}
+],
+[
+{
+"w": "kotvanen",
+"d": "Hetki, lyhyt aika."
+},
+{
+"w": "hamaan",
+"d": "Aina johonkin asti; vanhahtava sana, esim. ”hamaan tappiin”."
+},
+{
+"w": "railo",
+"d": "Jäässä oleva pitkä halkeama tai avovesiväylä."
+},
+{
+"w": "lörtsy",
+"d": "Savolainen rasvassa paistettu puolikuun muotoinen piiras, täytteenä lihaa tai omenaa."
+},
+{
+"w": "rukki",
+"d": "Poljettava kehräyslaite, jolla villasta tai pellavasta tehtiin lankaa."
+}
+],
+[
+{
+"w": "kievari",
+"d": "Majatalo, jonka piti tarjota matkustajille yösija ja hevoskyyti."
+},
+{
+"w": "talkkuna",
+"d": "Paahdetuista ohra-, kaura- ja hernejauhoista tehty seos, jota syödään piimän kanssa."
+},
+{
+"w": "riite",
+"d": "Ohut, juuri muodostunut ensijää."
+},
+{
+"w": "ahtojää",
+"d": "Jäälauttojen kasautuessa toistensa päälle syntynyt röykkiö."
+},
+{
+"w": "taivaanvuohi",
+"d": "Kurppalintu, jonka pyrstösulat tuottavat syöksylennossa määkivän äänen."
+}
+],
+[
+{
+"w": "säynävä",
+"d": "Särkikaloihin kuuluva kala, jonka evät ovat punertavat."
+},
+{
+"w": "mäkitupalainen",
+"d": "Maaton maaseudun asukas, jolla oli oma mökki mutta ei viljelysmaata."
+},
+{
+"w": "korpi",
+"d": "Kostea, kuusivaltainen suometsä."
+},
+{
+"w": "luhti",
+"d": "Kaksikerroksinen aitta, jonka yläkertaan kuljetaan ulkoparvelta; käytettiin kesäisin makuupaikkana."
+},
+{
+"w": "jupakka",
+"d": "Kiista tai kohu, josta nousee meteliä."
+}
+],
+[
+{
+"w": "metsänpeitto",
+"d": "Kansanuskon tila, jossa metsä kätkee ihmisen: hän ei tunnista tuttua ympäristöä eikä muut näe häntä."
+},
+{
+"w": "kehrääjä",
+"d": "Hämärällä liikkuva lintu, jonka laulu on pitkää, surisevaa pörinää."
+},
+{
+"w": "rössypottu",
+"d": "Oululainen keitto, jossa on perunaa ja verestä tehtyä rössyä."
+},
+{
+"w": "kurikka",
+"d": "Puinen nuija, jolla esimerkiksi pyykkiä hakattiin."
+},
+{
+"w": "sultsina",
+"d": "Karjalainen ohut, rieskamainen leivonnainen, joka täytetään puurolla ja taitetaan kiinni."
+}
+],
+[
+{
+"w": "juolukka",
+"d": "Mustikan sukuinen varpu, jonka siniharmaat marjat ovat syötäviä mutta mietoja."
+},
+{
+"w": "vanamo",
+"d": "Pieni, tuoksuva varpu, jonka varressa on kaksi vaaleanpunaista kellokukkaa."
+},
+{
+"w": "nietos",
+"d": "Tuulen kasaama korkea lumikasa."
+},
+{
+"w": "sokeritoukka",
+"d": "Siivetön, hopeanhohtoinen pikkuhyönteinen, joka viihtyy kosteissa sisätiloissa."
+},
+{
+"w": "pilttuu",
+"d": "Tallin kapea karsina, jossa hevonen seisoo."
+}
+]
+];
+
+const app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const mod = (a, n) => ((a % n) + n) % n;
+const LS = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+/* ---------- Firestore adapter ---------- */
+let fs = null, me = null;
+const db = {
+  doc: p => {
+    const r = () => fDoc(fs, p);
+    return {
+      get: async () => { const s = await getDoc(r()); return { id: s.id, exists: s.exists(), data: () => s.data() }; },
+      set: d => setDoc(r(), d),
+      update: d => updateDoc(r(), d),
+      delete: () => deleteDoc(r()),
+      onSnapshot: (n, e) => onSnapshot(r(), s => n({ id: s.id, exists: s.exists(), data: () => s.data() }), e),
+    };
+  },
+  collection: p => ({
+    add: d => addDoc(fCol(fs, p), d),
+    onSnapshot: (n, e) => onSnapshot(fCol(fs, p), s => n({ docs: s.docs.map(d => ({ id: d.id, data: () => d.data() })) }), e),
+  }),
+};
+
+const S = {
+  room: null, game: null, players: [], answers: [], votes: [], rounds: [], cards: [],
+  loaded: { game: false, players: false, cards: false },
+  tab: 'peli', fatal: null, slow: false, err: null,
+  keep: {}, confirm: null, busy: false, showDefs: false,
+  lastSpin: undefined, wheelRot: 0, anim: null, unsubs: [],
+};
+
+/* ---------- derived ---------- */
+const R = () => 'rooms/' + S.room;
+const G = () => S.game || {};
+const active = () => S.players.filter(p => p.active).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+const meP = () => S.players.find(p => p.id === me);
+const joined = () => !!(meP() && meP().active);
+const nameOf = id => { const p = S.players.find(p => p.id === id); return (p && p.name) || 'Tuntematon'; };
+const isHamy = () => me && G().hamy === me;
+const curAnswers = () => { const g = G(); return S.answers.filter(a => a.gameId === g.gameId && a.round === g.round && (a.text || '').trim()); };
+const curVotes = () => { const g = G(); return S.votes.filter(v => v.gameId === g.gameId && v.round === g.round && v.choice); };
+const curCard = () => S.cards.find(c => c.id === G().cardId);
+const curWord = () => { const c = curCard(), g = G(); if (!c || g.wordIndex == null) return null; return (c.words || [])[g.wordIndex] || null; };
+function totals() {
+  const g = G(), t = {};
+  for (const r of S.rounds) if (r.gameId === g.gameId) for (const [k, v] of Object.entries(r.points || {})) t[k] = (t[k] || 0) + v;
+  return t;
+}
+function computePoints() {
+  const g = G(), pts = {}, list = g.list || [];
+  const add = (k, n) => { pts[k] = (pts[k] || 0) + n; };
+  for (const v of curVotes()) {
+    if (v.choice === '__true') add(v.id, 2);
+    else if (v.choice !== v.id && list.some(i => i.key === v.choice)) add(v.choice, 1);
+  }
+  for (const [k, on] of Object.entries(g.bonus || {})) if (on) add(k, 3);
+  return pts;
+}
+function nextHamy() {
+  const act = active(); if (!act.length) return null;
+  const i = act.findIndex(p => p.id === G().hamy);
+  return act[(i + 1) % act.length].id;
+}
+
+/* ---------- writes ---------- */
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 4200);
+}
+function handleErr(e) {
+  const code = e && e.code;
+  if (code === 'permission-denied') toast('Tietokanta kieltäytyi tallennuksesta. Tarkista Firestoren säännöt ja että anonyymi kirjautuminen on päällä.');
+  else if (code === 'resource-exhausted') toast('Firebasen ilmaiskiintiö on täynnä tältä päivältä.');
+  else if (code === 'unavailable') toast('Ei yhteyttä tietokantaan. Tarkista verkkoyhteys.');
+  else toast('Tallennus epäonnistui. Yritä uudelleen.');
+  render();
+}
+async function act(fn) {
+  if (S.busy) return; S.busy = true;
+  try { await fn(); } catch (e) { console.error(e); handleErr(e); }
+  finally { S.busy = false; }
+}
+const gameRef = () => db.doc(R());
+const resetRound = { list: [], bonus: {}, cardId: null, roll: null, wordIndex: null };
+
+const A = {
+  async createRoom() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = ''; for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    await db.doc('rooms/' + code).set({ gameId: newId(), phase: 'lobby', round: 1, hamy: null, usedCards: [], createdAt: Date.now(), ...resetRound });
+    location.hash = code;
+  },
+  async joinRoom() {
+    const code = (S.keep.roomcode || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!code) { toast('Kirjoita huoneen koodi.'); return; }
+    const snap = await db.doc('rooms/' + code).get();
+    if (!snap.exists) { toast('Huonetta ' + code + ' ei löytynyt.'); return; }
+    location.hash = code;
+  },
+  leaveRoom() { location.hash = ''; },
+  async copyLink() {
+    try { await navigator.clipboard.writeText(location.href); toast('Linkki kopioitu – lähetä se kavereille.'); }
+    catch { toast('Kopioi osoite selaimen osoiteriviltä.'); }
+  },
+  async join() {
+    const name = (S.keep.joinname ?? LS.get('hamy-name') ?? '').trim();
+    if (!name) { toast('Kirjoita nimimerkki.'); return; }
+    LS.set('hamy-name', name);
+    const ex = meP();
+    await db.doc(R() + '/players/' + me).set({ name: name.slice(0, 30), joinedAt: ex?.joinedAt || Date.now(), active: true });
+  },
+  async start() {
+    const act_ = active(); if (act_.length < 2) { toast('Tarvitaan vähintään kaksi pelaajaa.'); return; }
+    const g = G();
+    await gameRef().update({ phase: 'spin', round: g.round || 1, hamy: act_[0].id, ...resetRound });
+  },
+  async spin() {
+    const g = G();
+    let used = g.usedCards || [];
+    let pool = S.cards.filter(c => !used.includes(c.id) && (c.words || []).length);
+    if (!pool.length) { used = []; pool = S.cards.filter(c => (c.words || []).length); }
+    if (!pool.length) { toast('Pakka on tyhjä – lisää kortteja Pakka-välilehdellä.'); return; }
+    const card = pool[Math.floor(Math.random() * pool.length)];
+    const roll = 1 + Math.floor(Math.random() * 6);
+    const n = card.words.length;
+    const wordIndex = roll === 6 ? null : (roll - 1 < n ? roll - 1 : Math.floor(Math.random() * n));
+    await gameRef().update({
+      phase: roll === 6 ? 'choose' : 'write', cardId: card.id, roll, wordIndex,
+      spinId: newId(), usedCards: [...used, card.id], list: [], bonus: {},
+    });
+  },
+  async choose(i) { await gameRef().update({ phase: 'write', wordIndex: Number(i) }); },
+  async answer() {
+    const g = G(); const key = 'ans-' + g.gameId + '-' + g.round;
+    const text = (S.keep[key] ?? '').trim();
+    if (!text) { toast('Kirjoita ensin selitys.'); return; }
+    await db.doc(R() + '/answers/' + me).set({ gameId: g.gameId, round: g.round, text: text.slice(0, 400), at: Date.now() });
+    toast('Selitys tallennettu.');
+  },
+  async toRead() {
+    const w = curWord(); if (!w) { toast('Sanaa ei löytynyt pakasta.'); return; }
+    const items = curAnswers().map(a => ({ key: a.id, text: a.text }));
+    items.push({ key: '__true', text: w.d });
+    for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [items[i], items[j]] = [items[j], items[i]]; }
+    await gameRef().update({ phase: 'read', list: items });
+  },
+  async toVote() { await gameRef().update({ phase: 'vote' }); },
+  async vote(key) {
+    const g = G(); if (key === me) return;
+    await db.doc(R() + '/votes/' + me).set({ gameId: g.gameId, round: g.round, choice: key });
+  },
+  async reveal() { await gameRef().update({ phase: 'reveal' }); },
+  async bonus(key) { const g = G(); await gameRef().update({ bonus: { ...(g.bonus || {}), [key]: !(g.bonus || {})[key] } }); },
+  async next() {
+    const g = G(); const w = curWord();
+    await db.doc(`${R()}/rounds/${g.gameId}-${g.round}`).set({ gameId: g.gameId, round: g.round, points: computePoints(), word: w ? w.w : '', at: Date.now() });
+    await gameRef().update({ phase: 'spin', round: (g.round || 1) + 1, hamy: nextHamy(), ...resetRound });
+  },
+  async skip() { const g = G(); await gameRef().update({ phase: 'spin', round: (g.round || 1) + 1, hamy: nextHamy(), ...resetRound }); },
+  async newGame() { await gameRef().update({ gameId: newId(), phase: 'lobby', round: 1, hamy: null, ...resetRound }); },
+  async leave() {
+    if (isHamy() && G().phase !== 'lobby') await A.skip();
+    await db.doc(R() + '/players/' + me).update({ active: false });
+  },
+  async kick(id) {
+    if (G().hamy === id && G().phase !== 'lobby') await A.skip();
+    await db.doc(R() + '/players/' + id).update({ active: false });
+  },
+  async addCard() {
+    const words = [];
+    for (let i = 0; i < 5; i++) {
+      const w = (S.keep['nw' + i] || '').trim(), d = (S.keep['nd' + i] || '').trim();
+      if (!w && !d) continue;
+      if (!w || !d) { toast(`Rivi ${i + 1}: anna sekä sana että oikea selitys.`); return; }
+      words.push({ w: w.slice(0, 60), d: d.slice(0, 400) });
+    }
+    if (!words.length) { toast('Kirjoita vähintään yksi sana ja sen selitys.'); return; }
+    await db.collection('cards').add({ words, createdAt: Date.now(), addedBy: me });
+    for (let i = 0; i < 5; i++) { delete S.keep['nw' + i]; delete S.keep['nd' + i]; }
+    toast(words.length < 5 ? `Kortti lisätty (${words.length} sanaa – arvan luvuilla yli ${words.length} sana valitaan satunnaisesti).` : 'Kortti lisätty pakkaan.');
+  },
+  async delCard(id) { await db.doc('cards/' + id).delete(); toast('Kortti poistettu.'); },
+};
+
+function confirmFirst(key, fn) {
+  if (S.confirm === key) { S.confirm = null; act(fn); return; }
+  S.confirm = key; render();
+  clearTimeout(confirmFirst._t); confirmFirst._t = setTimeout(() => { S.confirm = null; render(); }, 4000);
+}
+
+/* ---------- wheel ---------- */
+const ANIM_MS = 3000;
+function wheelTarget(roll) { const c = (roll - 0.5) * 60; return mod(-c, 360); }
+function curRot() {
+  if (!S.anim) return S.wheelRot;
+  const p = Math.min(1, (performance.now() - S.anim.start) / ANIM_MS);
+  const e = 1 - Math.pow(1 - p, 3);
+  return S.anim.from + (S.anim.to - S.anim.from) * e;
+}
+function tick() {
+  const el = document.getElementById('wheelg');
+  if (el) el.setAttribute('transform', `rotate(${curRot().toFixed(2)} 115 125)`);
+  if (S.anim && performance.now() - S.anim.start < ANIM_MS) requestAnimationFrame(tick);
+  else if (S.anim) { S.wheelRot = S.anim.to; S.anim = null; render(); }
+}
+function onGameChanged() {
+  const g = G();
+  if (g.spinId && g.spinId !== S.lastSpin) {
+    if (S.lastSpin === undefined || !g.roll) { if (g.roll) S.wheelRot = wheelTarget(g.roll); }
+    else {
+      const from = curRot();
+      const to = from - mod(from, 360) + 360 * 5 + wheelTarget(g.roll);
+      S.anim = { from, to, start: performance.now() };
+      requestAnimationFrame(tick);
+    }
+  }
+  S.lastSpin = g.spinId || null;
+}
+function wheelSVG() {
+  const cx = 115, cy = 125, r = 100;
+  const colors = ['#d9480f', '#f2c14e', '#2f5d8a', '#1c7c54', '#e8763e', '#7a4fa0'];
+  const pt = (a, rr) => [cx + rr * Math.sin(a * Math.PI / 180), cy - rr * Math.cos(a * Math.PI / 180)];
+  let s = '';
+  for (let i = 0; i < 6; i++) {
+    const a0 = i * 60, a1 = a0 + 60, [x0, y0] = pt(a0, r), [x1, y1] = pt(a1, r), [lx, ly] = pt(a0 + 30, r * 0.64);
+    const fg = (i === 1) ? '#211e1a' : '#fff';
+    s += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${colors[i]}" stroke="#211e1a" stroke-width="2"/>`;
+    if (i < 5) s += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="34" fill="${fg}" transform="rotate(${a0 + 30} ${lx.toFixed(1)} ${ly.toFixed(1)})">${i + 1}</text>`;
+    else s += `<g transform="rotate(${a0 + 30} ${lx.toFixed(1)} ${ly.toFixed(1)})"><text x="${lx.toFixed(1)}" y="${(ly - 6).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="30" fill="#fff">6</text><text x="${lx.toFixed(1)}" y="${(ly + 18).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-weight="700" font-size="10" fill="#fff">VALINTA</text></g>`;
+  }
+  return `<svg viewBox="0 0 230 250" role="img" aria-label="Arpakiekko 1–6">
+    <g id="wheelg" transform="rotate(${curRot().toFixed(2)} ${cx} ${cy})">${s}<circle cx="${cx}" cy="${cy}" r="14" fill="#fffaf1" stroke="#211e1a" stroke-width="2"/></g>
+    <path d="M${cx - 13},6 L${cx + 13},6 L${cx},34 Z" fill="#211e1a" stroke="#fffaf1" stroke-width="2"/>
+  </svg>`;
+}
+
+/* ---------- render ---------- */
+function render() {
+  const tabs = [['peli', 'Peli'], ['pakka', 'Pakka'], ['saannot', 'Säännöt']];
+  document.getElementById('nav').innerHTML =
+    (S.room ? `<span class="roomtag">Huone <b>${esc(S.room)}</b> <button class="linkish" data-act="copyLink">kopioi linkki</button> · <button class="linkish" data-act="leaveRoom">vaihda</button></span>` : '') +
+    tabs.map(([k, l]) => `<button data-act="tab" data-arg="${k}" aria-current="${S.tab === k}">${l}</button>`).join('');
+
+  const f = document.activeElement, fid = f && f.id, sel = f && 'selectionStart' in f ? [f.selectionStart, f.selectionEnd] : null;
+
+  let html;
+  if (S.fatal) html = `<div class="card"><h2>Peliä ei voi avata</h2><p>${S.fatal}</p></div>`;
+  else if (!me) html = `<div class="card"><p class="muted">${S.slow ? 'Yhteyttä ei saada. Tarkista verkkoyhteys.' : 'Yhdistetään…'}</p></div>`;
+  else if (S.tab === 'saannot') html = renderRules();
+  else if (S.tab === 'pakka') html = S.loaded.cards ? renderDeck() : `<div class="card"><p class="muted">Ladataan pakkaa…</p></div>`;
+  else if (!S.room) html = renderRoomPicker();
+  else if (!S.loaded.game || !S.loaded.players || !S.loaded.cards) html = `<div class="card"><p class="muted">${S.slow ? 'Pelin tietoja ei saada haettua. Tarkista verkkoyhteys.' : 'Ladataan peliä…'}</p></div>`;
+  else if (!S.game) html = `<div class="card stack"><h2>Huonetta ${esc(S.room)} ei löytynyt</h2><p class="muted">Tarkista koodi tai luo uusi huone.</p><button class="btn" data-act="leaveRoom">Takaisin</button></div>`;
+  else html = `<div class="layout"><div>${renderStage()}</div><aside>${renderSide()}</aside></div>`;
+  if (S.err) html = `<div class="notice" style="margin-bottom:16px">${esc(S.err)}</div>` + html;
+  app.innerHTML = html;
+
+  if (fid) { const el = document.getElementById(fid); if (el) { el.focus(); if (sel && 'setSelectionRange' in el) try { el.setSelectionRange(sel[0], sel[1]); } catch {} } }
+  if (S.anim) requestAnimationFrame(tick);
+}
+
+function renderRoomPicker() {
+  return `<div class="layout"><div class="card stack stage">
+    <div class="eyebrow">Tervetuloa</div>
+    <h2>Pelataanko Hämyä?</h2>
+    <p class="muted">Luo oma pelihuone ja lähetä sen linkki kavereille. Huoneeseen pääsee vain linkin tai koodin tietävä.</p>
+    <div><button class="btn" data-act="createRoom">Luo uusi pelihuone</button></div>
+    <hr style="border:0;border-top:2px dashed var(--soft);margin:22px 0">
+    <b>Onko sinulla jo koodi?</b>
+    <div class="row"><input type="text" id="roomcode" data-keep maxlength="10" placeholder="Esim. K7MPQ2" value="${esc(S.keep.roomcode || '')}" style="max-width:200px;text-transform:uppercase">
+    <button class="btn secondary" data-act="joinRoom">Liity huoneeseen</button></div>
+  </div><aside>${''}</aside></div>`;
+}
+
+function joinBox(compact) {
+  const v = S.keep.joinname ?? LS.get('hamy-name') ?? '';
+  return `<div class="${compact ? 'notice' : 'card'} stack">
+    ${compact ? '<b>Liity mukaan kesken pelin</b>' : '<h2>Liity peliin</h2><p class="muted">Valitse nimimerkki, jolla muut näkevät sinut.</p>'}
+    <div class="row"><input type="text" id="joinname" data-keep maxlength="30" placeholder="Nimimerkki" value="${esc(v)}" style="max-width:280px">
+    <button class="btn" data-act="join">Liity</button></div></div>`;
+}
+
+function statusChips(doneIds) {
+  return `<div class="chips">${active().map(p => `<span class="chip ${doneIds.has(p.id) ? 'done' : ''}">${doneIds.has(p.id) ? '✓ ' : ''}${esc(p.name)}</span>`).join('')}</div>`;
+}
+
+function wordHeader(label) {
+  const w = curWord(), g = G();
+  return `<div class="eyebrow">Kierros ${g.round} · ${label}</div><div class="word">${esc(w ? w.w : '?')}</div>`;
+}
+
+function renderStage() {
+  const g = G();
+  const hamyName = esc(nameOf(g.hamy));
+  const notJoinedNote = (!joined() && g.phase && g.phase !== 'lobby') ? joinBox(true) : '';
+
+  if (g.phase === 'lobby') {
+    const act_ = active();
+    return `${!joined() ? joinBox(false) : ''}
+    <div class="card stack stage">
+      <div class="eyebrow">Pelihuone ${esc(S.room)}</div>
+      <h2>Odotetaan pelaajia</h2>
+      <p class="muted">Lähetä kavereille tämän sivun linkki (<button class="linkish" data-act="copyLink">kopioi linkki</button>) tai huoneen koodi <b>${esc(S.room)}</b>. Kun kaikki ovat liittyneet, kuka tahansa voi aloittaa pelin. Hämyn vuoro kiertää liittymisjärjestyksessä.</p>
+      ${act_.length ? `<div class="chips">${act_.map(p => `<span class="chip">${esc(p.name)}${p.id === me ? ' (sinä)' : ''}</span>`).join('')}</div>` : '<p class="muted">Ei vielä pelaajia.</p>'}
+      <p class="muted">Pakassa ${S.cards.length} korttia.</p>
+      ${joined() ? `<button class="btn" data-act="start" ${act_.length < 2 ? 'disabled' : ''}>Aloita peli</button>${act_.length < 2 ? ' <span class="muted">Tarvitaan vähintään 2 pelaajaa.</span>' : ''}` : ''}
+    </div>`;
+  }
+
+  if (S.anim) {
+    return `${notJoinedNote}<div class="card stage"><div class="eyebrow">Kierros ${g.round}</div><h2>Arpa pyörii…</h2><div class="wheelwrap">${wheelSVG()}</div></div>`;
+  }
+
+  if (g.phase === 'spin') {
+    return `${notJoinedNote}<div class="card stage">
+      <div class="eyebrow">Kierros ${g.round}</div>
+      <h2>${isHamy() ? 'Sinä olet hämy!' : `${hamyName} on hämy`}</h2>
+      <p class="muted">${isHamy() ? 'Pyöritä arpaa. Luku 1–5 valitsee kortin sanan, 6 antaa sinun valita itse.' : 'Odotetaan, että hämy pyöräyttää arpaa.'}</p>
+      <div class="wheelwrap">${wheelSVG()}${isHamy() ? '<button class="btn" data-act="spin">Pyöritä arpaa</button>' : ''}</div>
+    </div>`;
+  }
+
+  if (g.phase === 'choose') {
+    const c = curCard();
+    return `${notJoinedNote}<div class="card stage stack">
+      <div class="eyebrow">Kierros ${g.round} · Arpa: 6</div>
+      ${isHamy() ? `<h2>Arpa näytti kuutosta – valitse sana</h2><p class="muted">Valitse kortilta sana, jonka kaikki selittävät. Oikeaa selitystä et näe sinäkään.</p>
+        <div class="list">${(c?.words || []).map((w, i) => `<button class="opt" data-act="choose" data-arg="${i}"><span class="num">${i + 1}</span><span class="body display" style="font-size:22px;font-weight:800">${esc(w.w)}</span></button>`).join('')}</div>`
+      : `<h2>Arpa näytti kuutosta</h2><p class="muted">${hamyName} valitsee sanaa kortilta…</p><div class="wheelwrap">${wheelSVG()}</div>`}
+    </div>`;
+  }
+
+  if (g.phase === 'write') {
+    const key = 'ans-' + g.gameId + '-' + g.round;
+    const mine = S.answers.find(a => a.id === me && a.gameId === g.gameId && a.round === g.round);
+    const val = S.keep[key] ?? (mine ? mine.text : '');
+    const done = new Set(curAnswers().map(a => a.id));
+    const act_ = active(); const nDone = act_.filter(p => done.has(p.id)).length;
+    return `${notJoinedNote}<div class="card stage stack">
+      ${wordHeader(g.roll ? 'Arpa: ' + g.roll : 'Sana')}
+      <p class="muted">Kirjoita sanalle uskottava selitys. Kukaan ei tiedä oikeaa – ei edes hämy.</p>
+      ${joined() ? `<textarea id="${key}" data-keep maxlength="400" placeholder="Esim. Vanha nimitys…">${esc(val)}</textarea>
+      <div class="row"><button class="btn" data-act="answer">${mine ? 'Päivitä selitys' : 'Tallenna selitys'}</button>
+      ${mine ? '<span class="muted">✓ Selityksesi on tallessa. Voit vielä muokata sitä.</span>' : ''}</div>` : ''}
+      <div><div class="eyebrow" style="margin-bottom:6px">Valmiina ${nDone}/${act_.length}</div>${statusChips(done)}</div>
+      ${isHamy() ? `<div class="banner row" style="justify-content:space-between">Kun kaikki ovat valmiita, siirry lukemaan selitykset.
+        <button class="btn secondary small" data-act="toRead">Lue selitykset${nDone < act_.length ? ` (${nDone}/${act_.length})` : ''} →</button></div>` : ''}
+    </div>`;
+  }
+
+  if (g.phase === 'read') {
+    const list = g.list || [];
+    return `${notJoinedNote}<div class="card stage stack">
+      ${wordHeader('Luku')}
+      ${isHamy() ? `<div class="banner">Lue selitykset ääneen tässä järjestyksessä, numeroineen. Oikea selitys on joukossa, mutta et tiedä mikä.</div>
+        <ol class="list">${list.map((it, i) => `<li class="opt" style="cursor:default"><span class="num">${i + 1}</span><span class="body">${esc(it.text)}</span></li>`).join('')}</ol>
+        <button class="btn" data-act="toVote">Avaa äänestys →</button>`
+      : `<h2 style="font-size:22px">${hamyName} lukee selitykset ääneen</h2><p class="muted">Kuuntele tarkasti. Äänestys aukeaa, kun kaikki on luettu. Selityksiä on ${list.length}.</p>`}
+    </div>`;
+  }
+
+  if (g.phase === 'vote') {
+    const list = g.list || [];
+    const myVote = curVotes().find(v => v.id === me);
+    const voted = new Set(curVotes().map(v => v.id));
+    const act_ = active(); const nDone = act_.filter(p => voted.has(p.id)).length;
+    return `${notJoinedNote}<div class="card stage stack">
+      ${wordHeader('Äänestys')}
+      <p class="muted">${joined() ? 'Äänestä selitystä, jota pidät oikeana. Omaa selitystäsi ei voi äänestää. Voit vaihtaa ääntä paljastukseen asti.' : 'Pelaajat äänestävät.'}</p>
+      <div class="list">${list.map((it, i) => {
+        const own = it.key === me, selected = myVote && myVote.choice === it.key;
+        return `<button class="opt ${own ? 'own' : ''} ${selected ? 'selected' : ''}" data-act="vote" data-arg="${esc(it.key)}" ${own || !joined() ? 'disabled' : ''}>
+          <span class="num">${i + 1}</span><span class="body">${esc(it.text)}${own ? '<div class="meta">Oma selityksesi</div>' : ''}${selected ? '<div class="meta">✓ Äänesi</div>' : ''}</span></button>`;
+      }).join('')}</div>
+      <div><div class="eyebrow" style="margin-bottom:6px">Äänestäneet ${nDone}/${act_.length}</div>${statusChips(voted)}</div>
+      ${isHamy() ? `<div class="banner row" style="justify-content:space-between">Kun kaikki ovat äänestäneet, paljasta oikea selitys.
+        <button class="btn secondary small" data-act="reveal">Paljasta${nDone < act_.length ? ` (${nDone}/${act_.length})` : ''} →</button></div>` : ''}
+    </div>`;
+  }
+
+  if (g.phase === 'reveal') {
+    const list = g.list || [], votes = curVotes(), pts = computePoints();
+    const items = list.map((it, i) => {
+      const voters = votes.filter(v => v.choice === it.key).map(v => esc(nameOf(v.id)));
+      const correct = it.key === '__true';
+      const bon = (g.bonus || {})[it.key];
+      return `<div class="opt ${correct ? 'correct' : ''}" style="cursor:default"><span class="num">${i + 1}</span><span class="body">
+        ${correct ? '<span class="tag">Oikea selitys</span><br>' : ''}${esc(it.text)}
+        <div class="meta">${correct ? '' : `Kirjoitti: <b>${esc(nameOf(it.key))}</b> · `}${voters.length ? `Äänet: ${voters.join(', ')}` : 'Ei ääniä'}${bon ? ' · <b>Osui oikeaan +3</b>' : ''}</div>
+        ${isHamy() && !correct ? `<div style="margin-top:8px"><button class="btn secondary small" data-act="bonus" data-arg="${esc(it.key)}">${bon ? 'Peru “osui oikeaan”' : 'Osui oikeaan (+3)'}</button></div>` : ''}
+      </span></div>`;
+    }).join('');
+    const rows = active().map(p => `<tr><td>${esc(p.name)}</td><td>+${pts[p.id] || 0}</td></tr>`).join('');
+    return `${notJoinedNote}<div class="card stage stack">
+      ${wordHeader('Paljastus')}
+      <div class="list">${items}</div>
+      <div><div class="eyebrow" style="margin-bottom:4px">Kierroksen pisteet</div><table class="ptable">${rows}</table></div>
+      ${isHamy() ? `<div class="banner row" style="justify-content:space-between">Jos joku kirjoitti käytännössä oikean selityksen, merkitse se ylhäältä. Sitten seuraavalle kierrokselle.
+        <button class="btn secondary small" data-act="next">Seuraava kierros →</button></div>` : `<p class="muted">${hamyName} aloittaa seuraavan kierroksen. Seuraava hämy on ${esc(nameOf(nextHamy()))}.</p>`}
+    </div>`;
+  }
+  return `<div class="card">Tuntematon pelitila.</div>`;
+}
+
+function renderSide() {
+  const g = G(), t = totals();
+  const preview = g.phase === 'reveal' ? computePoints() : {};
+  const done = g.phase === 'write' ? new Set(curAnswers().map(a => a.id)) : g.phase === 'vote' ? new Set(curVotes().map(v => v.id)) : null;
+  const ps = active().slice().sort((a, b) => (t[b.id] || 0) - (t[a.id] || 0));
+  const lis = ps.map(p => `<li>${done ? `<span class="dot ${done.has(p.id) ? 'on' : ''}" title="${done.has(p.id) ? 'Valmis' : 'Kesken'}"></span>` : ''}
+    <span>${esc(p.name)}${p.id === me ? ' <span class="muted">(sinä)</span>' : ''}</span>
+    ${g.hamy === p.id && g.phase !== 'lobby' ? '<span class="badge">Hämy</span>' : ''}
+    ${S.confirm === 'kick-' + p.id ? `<button class="linkish" data-act="kick" data-arg="${p.id}">Poista?</button>` : (p.id !== me && joined() ? `<button class="linkish" data-act="kick" data-arg="${p.id}" title="Poista pelaaja pelistä" aria-label="Poista ${esc(p.name)}">×</button>` : '')}
+    <span class="pts">${t[p.id] || 0}${preview[p.id] ? ` <span class="delta">+${preview[p.id]}</span>` : ''}</span></li>`).join('');
+  return `<div class="card">
+    <div class="eyebrow">Pisteet</div>
+    ${ps.length ? `<ul class="score">${lis}</ul>` : '<p class="muted">Ei pelaajia.</p>'}
+  </div>
+  ${joined() ? `<div class="card stack">
+    <div class="eyebrow">Pelin hallinta</div>
+    <div class="row">
+      ${g.phase && g.phase !== 'lobby' ? `<button class="btn secondary small" data-act="skip">${S.confirm === 'skip' ? 'Varmista: ohita' : 'Ohita hämyn vuoro'}</button>` : ''}
+      <button class="btn secondary small" data-act="newGame">${S.confirm === 'newGame' ? 'Varmista: nollaa pisteet' : 'Uusi peli'}</button>
+      <button class="btn danger small" data-act="leave">${S.confirm === 'leave' ? 'Varmista: poistu' : 'Poistu pelistä'}</button>
+    </div>
+    <p class="muted" style="font-size:13px;margin:0">“Ohita” siirtää hämyn vuoron seuraavalle, jos hämy on poissa. “Uusi peli” nollaa pisteet, mutta pelaajat pysyvät.</p>
+  </div>` : ''}`;
+}
+
+function renderDeck() {
+  const cards = S.cards.slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const nWords = cards.reduce((n, c) => n + (c.words || []).length, 0);
+  return `<div class="card stack">
+    <div class="row" style="justify-content:space-between"><div><div class="eyebrow">Yhteinen pakka</div><h2>${cards.length} korttia · ${nWords} sanaa</h2></div>
+    <button class="btn secondary small" data-act="toggleDefs">${S.showDefs ? 'Piilota selitykset' : 'Näytä selitykset'}</button></div>
+    ${S.showDefs ? '<div class="notice">Selitykset näkyvät – älä katso, jos aiot pelata näillä korteilla!</div>' : '<p class="muted">Selitykset on piilotettu, jotta pakan selaaminen ei pilaa peliä. Pakka on yhteinen kaikille pelihuoneille.</p>'}
+  </div>
+  <div class="card stack">
+    <h2>Lisää uusi kortti</h2>
+    <p class="muted">Kortilla on viisi sanaa, joita arvan luvut 1–5 vastaavat. Kirjoita jokaiselle sanalle sen oikea merkitys – se näytetään vasta paljastuksessa.</p>
+    <div class="formgrid">
+      ${[0, 1, 2, 3, 4].map(i => `<b class="display" style="font-size:20px">${i + 1}</b>
+        <input type="text" id="nw${i}" data-keep maxlength="60" placeholder="Sana" value="${esc(S.keep['nw' + i] || '')}">
+        <input type="text" id="nd${i}" class="def" data-keep maxlength="400" placeholder="Oikea selitys" value="${esc(S.keep['nd' + i] || '')}">`).join('')}
+    </div>
+    <div><button class="btn" data-act="addCard">Lisää pakkaan</button></div>
+  </div>
+  <div class="card"><div class="deck-grid">${cards.map((c, idx) => `<div class="deck-card">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">Kortti ${idx + 1}</span>
+    <button class="linkish" data-act="delCard" data-arg="${esc(c.id)}">${S.confirm === 'del-' + c.id ? 'Varmista poisto' : 'Poista'}</button></div>
+    <ol>${(c.words || []).map(w => `<li><b>${esc(w.w)}</b>${S.showDefs ? `<div class="muted" style="font-size:14px">${esc(w.d)}</div>` : ''}</li>`).join('')}</ol>
+  </div>`).join('') || '<p class="muted">Pakka on tyhjä.</p>'}</div></div>`;
+}
+
+function renderRules() {
+  return `<div class="card rules stack">
+    <h2>Näin Hämyä pelataan</h2>
+    <ol>
+      <li><b>Hämy pyöräyttää arpaa.</b> Kortti nostetaan pakasta. Luku 1–5 määrää, monesko kortin sana valitaan. Kuutosella hämy saa valita sanan kortilta itse.</li>
+      <li><b>Kaikki näkevät sanan ja kirjoittavat sille selityksen</b> – myös hämy. Kukaan ei tiedä oikeaa selitystä, joten kirjoita mahdollisimman uskottava.</li>
+      <li><b>Hämy lukee selitykset ääneen.</b> Peli sekoittaa joukkoon sanan oikean selityksen, eikä hämykään tiedä, mikä niistä on oikea.</li>
+      <li><b>Kaikki äänestävät</b> selitystä, jota pitävät oikeana. Omaa ei voi äänestää.</li>
+      <li><b>Paljastus.</b> Peli näyttää oikean selityksen, kuka kirjoitti minkäkin ja kuka äänesti mitä.</li>
+    </ol>
+    <h3>Pisteet</h3>
+    <ul>
+      <li><b>+2</b> jos äänestit oikeaa selitystä.</li>
+      <li><b>+1</b> jokaisesta äänestä, jonka oma selityksesi sai.</li>
+      <li><b>+3</b> jos hämy toteaa, että kirjoitit käytännössä oikean selityksen.</li>
+    </ul>
+    <p class="muted">Hämyn vuoro kiertää pelaajalta toiselle. Pakkaa voi täydentää Pakka-välilehdellä.</p>
+  </div>`;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('input', e => { const el = e.target; if (el.hasAttribute && el.hasAttribute('data-keep')) S.keep[el.id] = el.value; });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target.id === 'joinname') { e.preventDefault(); act(A.join); }
+  if (e.target.id === 'roomcode') { e.preventDefault(); act(A.joinRoom); }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act, arg = b.dataset.arg;
+  if (a === 'tab') { S.tab = arg; render(); return; }
+  if (a === 'toggleDefs') { S.showDefs = !S.showDefs; render(); return; }
+  if (!me) return;
+  if (a === 'skip') return confirmFirst('skip', A.skip);
+  if (a === 'newGame') return confirmFirst('newGame', A.newGame);
+  if (a === 'leave') return confirmFirst('leave', A.leave);
+  if (a === 'kick') return confirmFirst('kick-' + arg, () => A.kick(arg));
+  if (a === 'delCard') return confirmFirst('del-' + arg, () => A.delCard(arg));
+  if (A[a]) act(() => A[a](arg));
+});
+
+/* ---------- data subscriptions ---------- */
+const docsOf = snap => snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function onSubErr(err) {
+  console.error(err);
+  S.err = err && err.code === 'permission-denied'
+    ? 'Tietokanta ei salli lukemista. Tarkista Firestoren säännöt ja että anonyymi kirjautuminen on päällä.'
+    : 'Yhteys tietokantaan katkesi. Lataa sivu uudelleen.';
+  render();
+}
+let slowTimer = null;
+function armSlow() { clearTimeout(slowTimer); S.slow = false; slowTimer = setTimeout(() => { S.slow = true; render(); }, 10000); }
+function loadedCheck() { if (S.loaded.cards && (!S.room || (S.loaded.game && S.loaded.players))) { clearTimeout(slowTimer); S.slow = false; } }
+
+function enterRoom() {
+  const code = decodeURIComponent(location.hash.slice(1)).toUpperCase().replace(/[^A-Z0-9]/g, '') || null;
+  if (code === S.room) return;
+  S.unsubs.forEach(u => u()); S.unsubs = [];
+  Object.assign(S, { room: code, game: null, players: [], answers: [], votes: [], rounds: [], lastSpin: undefined, anim: null, wheelRot: 0, tab: 'peli' });
+  S.loaded.game = S.loaded.players = false;
+  if (!code) { render(); return; }
+  armSlow();
+  const base = 'rooms/' + code;
+  S.unsubs.push(
+    db.doc(base).onSnapshot(s => { S.game = s.exists ? s.data() : null; S.loaded.game = true; loadedCheck(); onGameChanged(); render(); }, onSubErr),
+    db.collection(base + '/players').onSnapshot(s => { S.players = docsOf(s); S.loaded.players = true; loadedCheck(); render(); }, onSubErr),
+    db.collection(base + '/answers').onSnapshot(s => { S.answers = docsOf(s); render(); }, onSubErr),
+    db.collection(base + '/votes').onSnapshot(s => { S.votes = docsOf(s); render(); }, onSubErr),
+    db.collection(base + '/rounds').onSnapshot(s => { S.rounds = docsOf(s); render(); }, onSubErr),
+  );
+  render();
+}
+
+async function seedDeckOnce() {
+  try {
+    const flag = await db.doc('meta/deck').get();
+    if (flag.exists) return;
+    const batch = writeBatch(fs);
+    STARTER.forEach((c, i) => batch.set(fDoc(fs, 'cards/s' + String(i + 1).padStart(2, '0')), { words: c, createdAt: i + 1, seed: true }));
+    batch.set(fDoc(fs, 'meta/deck'), { seeded: true, at: Date.now() });
+    await batch.commit();
+  } catch (e) { console.error('seed', e); }
+}
+
+/* ---------- boot ---------- */
+(function boot() {
+  render();
+  if (Object.values(firebaseConfig).some(v => !v || String(v).includes('LIITÄ'))) {
+    S.fatal = 'Firebase-asetukset puuttuvat. Avaa tiedosto <b>index.html</b> ja liitä sen alkuun oman Firebase-projektisi <code>firebaseConfig</code>.';
+    render(); return;
+  }
+  armSlow();
+  let fbApp;
+  try { fbApp = initializeApp(firebaseConfig); fs = getFirestore(fbApp); }
+  catch (e) { console.error(e); S.fatal = 'Firebase-asetuksissa on virhe. Tarkista index.html-tiedoston firebaseConfig.'; render(); return; }
+  const auth = getAuth(fbApp);
+  onAuthStateChanged(auth, u => {
+    if (!u || me) return;
+    me = u.uid;
+    db.collection('cards').onSnapshot(s => { S.cards = docsOf(s); S.loaded.cards = true; loadedCheck(); render(); }, onSubErr);
+    seedDeckOnce();
+    enterRoom();
+  });
+  signInAnonymously(auth).catch(e => {
+    console.error(e);
+    S.fatal = e && e.code === 'auth/operation-not-allowed' || e && e.code === 'auth/admin-restricted-operation'
+      ? 'Anonyymi kirjautuminen ei ole päällä. Ota se käyttöön Firebase-konsolissa: Authentication → Sign-in method → Anonymous.'
+      : 'Kirjautuminen Firebaseen epäonnistui. Tarkista firebaseConfig ja verkkoyhteys.';
+    render();
+  });
+  window.addEventListener('hashchange', enterRoom);
+})();
+
+</script>
+</body>
+</html>
